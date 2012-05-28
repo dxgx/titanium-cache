@@ -27,20 +27,20 @@ Usage:
 ***************************************************/
 
 (function(){
-	
+
 	var CONFIG = {
 		// Disables cache (useful during development).
 		DISABLE: false,
-		
+
 		// Time to check for objects that will be expired.
 		// Will check each CACHE_EXPIRATION_INTERVAL seconds.
 		CACHE_EXPIRATION_INTERVAL: 60,
-		
+
 		// This will avoid the cache expiration task to be set up
 		// and will expire objects from cache before get.
 		EXPIRE_ON_GET: false
 	};
-	
+
 	Ti.App.Cache = function() {
 		var init_cache, expire_cache, current_timestamp, get, put, del;
 
@@ -50,7 +50,7 @@ Usage:
 			db.execute('CREATE TABLE IF NOT EXISTS cache (key TEXT UNIQUE, value TEXT, expiration INTEGER)');
 			db.close();
 			Ti.API.info('[CACHE] INITIALIZED');
-			
+
 			if (!CONFIG || (CONFIG && !CONFIG.EXPIRE_ON_GET)) {
 				// set cache expiration task
 				setInterval(expire_cache, cache_expiration_interval * 1000);
@@ -64,12 +64,12 @@ Usage:
 
 			// count how many objects will be deleted
 			var count = 0;
-		    var rs = db.execute('SELECT COUNT(*) FROM cache WHERE expiration <= ?', timestamp);
-		    while (rs.isValidRow()) {
-		        count = rs.field(0);
-		        rs.next();
-		    }
-		    rs.close();
+				var rs = db.execute('SELECT COUNT(*) FROM cache WHERE expiration <= ?', timestamp);
+				while (rs.isValidRow()) {
+						count = rs.field(0);
+						rs.next();
+				}
+				rs.close();
 
 			// deletes everything older than timestamp
 			db.execute('DELETE FROM cache WHERE expiration <= ?', timestamp);
@@ -86,23 +86,23 @@ Usage:
 
 		get = function(key) {
 			var db = Titanium.Database.open('cache');
-			
+
 			if (CONFIG && CONFIG.EXPIRE_ON_GET) {
 				Ti.API.debug('[CACHE] EXPIRE_ON_GET is set to "true"');
 				expire_cache();
 			}
-			
+
 			var rs = db.execute('SELECT value FROM cache WHERE key = ?', key);
 			var result = null;
 			if (rs.isValidRow()) {
 				Ti.API.info('[CACHE] HIT, key[' + key + ']');
 				result = JSON.parse(rs.fieldByName('value'));
 			} else {
-				Ti.API.info('[CACHE] MISS, key[' + key + ']');				
+				Ti.API.info('[CACHE] MISS, key[' + key + ']');
 			}
 			rs.close();
 			db.close();
-			
+
 			return result;
 		};
 
@@ -118,9 +118,17 @@ Usage:
 			db.close();
 		};
 
-		del = function(key) {
+		del = function(key, useLike) {
 			var db = Titanium.Database.open('cache');
-			db.execute('DELETE FROM cache WHERE key = ?', key);
+
+			if (useLike) {
+				var sql = "DELETE FROM cache WHERE key LIKE '%"+ key +"%'";
+				db.execute(sql);
+			} else {
+				var sql = 'DELETE FROM cache WHERE key = ?';
+				db.execute(sql, key);
+			}
+
 			db.close();
 			Ti.API.info('[CACHE] DELETED key[' + key + ']');
 		};
@@ -149,7 +157,7 @@ Usage:
 				del: del
 			};
 		}();
-		
+
 	}(CONFIG);
-	
+
 })();

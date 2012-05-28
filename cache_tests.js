@@ -27,6 +27,22 @@
 			expect(cache.get('deleted_key')).toBeNull();
 		});
 
+		it('should delete items from cache searching using LIKE statements', function() {
+			cache.put('deleted_key', { deleted: 'obj' });
+			expect(cache.get('deleted_key')).not.toBeNull();
+
+			cache.put('deleted_key.key1', { deleted: 'obj' });
+			expect(cache.get('deleted_key.key1')).not.toBeNull();
+
+			cache.put('deleted_key.key2', { deleted: 'obj' });
+			expect(cache.get('deleted_key.key2')).not.toBeNull();
+
+			cache.del('deleted_key.', true);
+			expect(cache.get('deleted_key')).not.toBeNull();
+			expect(cache.get('deleted_key.key1')).toBeNull();
+			expect(cache.get('deleted_key.key2')).toBeNull();
+		});
+
 		it('should get javascript objects from cache', function() {
 			cache.del('my_cache_key');
 			expect(cache.get('my_cache_key')).toBeNull();

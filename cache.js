@@ -117,9 +117,15 @@ var Cache = {
 		db.close();
 	},
 
-	del : function(key) {
+	del : function(key, useLike) {
 		var db = Titanium.Database.open('cache');
-		db.execute('DELETE FROM cache WHERE key = ?', key);
+		if (useLike) {
+			var sql = "DELETE FROM cache WHERE key LIKE '%"+ key +"%'";
+			db.execute(sql);
+		} else {
+			var sql = 'DELETE FROM cache WHERE key = ?';
+			db.execute(sql, key);
+		}
 		db.close();
 		Ti.API.info('[CACHE] DELETED key[' + key + ']');
 	}
